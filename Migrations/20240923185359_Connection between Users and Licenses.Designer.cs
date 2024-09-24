@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ServicesSystem.Models;
 
@@ -11,9 +12,11 @@ using ServicesSystem.Models;
 namespace ServicesSystem.Migrations
 {
     [DbContext(typeof(LicenseContext))]
-    partial class LicenseContextModelSnapshot : ModelSnapshot
+    [Migration("20240923185359_Connection between Users and Licenses")]
+    partial class ConnectionbetweenUsersandLicenses
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,6 +24,21 @@ namespace ServicesSystem.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("LicenseUser", b =>
+                {
+                    b.Property<int>("LicensesLicenseId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UsersUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("LicensesLicenseId", "UsersUserId");
+
+                    b.HasIndex("UsersUserId");
+
+                    b.ToTable("LicenseUser");
+                });
 
             modelBuilder.Entity("ServicesSystem.Models.Customer", b =>
                 {
@@ -77,31 +95,27 @@ namespace ServicesSystem.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
-                    b.Property<int>("LicenseId")
-                        .HasColumnType("int");
-
                     b.Property<string>("UserName")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("UserId");
 
-                    b.HasIndex("LicenseId");
-
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("ServicesSystem.Models.User", b =>
+            modelBuilder.Entity("LicenseUser", b =>
                 {
                     b.HasOne("ServicesSystem.Models.License", null)
-                        .WithMany("Users")
-                        .HasForeignKey("LicenseId")
+                        .WithMany()
+                        .HasForeignKey("LicensesLicenseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
 
-            modelBuilder.Entity("ServicesSystem.Models.License", b =>
-                {
-                    b.Navigation("Users");
+                    b.HasOne("ServicesSystem.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UsersUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

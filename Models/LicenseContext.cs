@@ -8,7 +8,6 @@ namespace ServicesSystem.Models
         {
 
         }
-
         public DbSet<Customer> Customers { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<License> Licenses { get; set; }
@@ -16,8 +15,8 @@ namespace ServicesSystem.Models
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<License>()
-                .HasMany(l => l.Users)
-                .WithMany(u => u.Licenses);  // Många-till-många relation
+              .HasKey(l => l.LicenseId);
+          
         }
     }
 

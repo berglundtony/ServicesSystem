@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ServicesSystem.Models;
 
@@ -11,9 +12,11 @@ using ServicesSystem.Models;
 namespace ServicesSystem.Migrations
 {
     [DbContext(typeof(LicenseContext))]
-    partial class LicenseContextModelSnapshot : ModelSnapshot
+    [Migration("20240923205659_NewTryToDeleteSoftwareName")]
+    partial class NewTryToDeleteSoftwareName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -77,7 +80,7 @@ namespace ServicesSystem.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
-                    b.Property<int>("LicenseId")
+                    b.Property<int?>("LicenseId")
                         .HasColumnType("int");
 
                     b.Property<string>("UserName")
@@ -94,9 +97,7 @@ namespace ServicesSystem.Migrations
                 {
                     b.HasOne("ServicesSystem.Models.License", null)
                         .WithMany("Users")
-                        .HasForeignKey("LicenseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("LicenseId");
                 });
 
             modelBuilder.Entity("ServicesSystem.Models.License", b =>

@@ -1,4 +1,6 @@
-﻿namespace ServicesSystem.Models
+﻿using System.Text.Json.Serialization;
+
+namespace ServicesSystem.Models
 {
     public class Account
     {
@@ -16,7 +18,14 @@
     public class OrderSoftwareServiceRequest
     {
         public int ServiceId { get; set; }
-        public int UserId { get; set; }
         public int QuantityOfUsers { get; set; }
+        public List<User> Users { get; set; } 
+    }
+
+    public class UserRequest
+    {
+        [JsonIgnore]
+        public int CustomerId { get; set; }
+        public string UserName { get; set; }
     }
 }

@@ -1,5 +1,7 @@
-﻿using System.ComponentModel;
+﻿using Swashbuckle.AspNetCore.Annotations;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace ServicesSystem.Models
 {
@@ -13,17 +15,12 @@ namespace ServicesSystem.Models
     public class User
     {
         [Key]
+        [JsonIgnore]
         public int UserId { get; set; }
         public int CustomerId { get; set; }
-        public string UserName { get; set; }
-        public ICollection<License> Licenses { get; set; }
-    }
-
-    public class LicenseUser
-    {
-        public int LicenseLicenseId { get; set; }
+        [JsonIgnore]
         public int LicenseId { get; set; }
-        public int UserId { get; set; }
+        public string UserName { get; set; }
     }
 
     public class License
@@ -31,10 +28,10 @@ namespace ServicesSystem.Models
         [Key]
         public int LicenseId { get; set; }
         public int AccountId { get; set; }
-        public string SoftwareName { get; set; }
+        public int ServiceId { get; set; }
         public string State { get; set; }
         public int QuantityOfUsers { get; set; }
         public DateTime ValidTo { get; set; }
-        public ICollection<User> Users { get; set; }
+        public ICollection<User> Users { get; set; } = new List<User>();
     }
 }
