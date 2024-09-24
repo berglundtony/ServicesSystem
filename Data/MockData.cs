@@ -10,7 +10,9 @@ namespace ServicesSystem.Data
             new Account { AccountId = 1, CustomerId = 1, Licenses = new List<License>() },
             new Account { AccountId = 2, CustomerId = 2, Licenses = new List<License>() },
             new Account { AccountId = 3, CustomerId = 3, Licenses = new List<License>() },
-            new Account { AccountId = 4, CustomerId = 1, Licenses = new List<License>() }
+            new Account { AccountId = 4, CustomerId = 1, Licenses = new List<License>() },
+            new Account { AccountId = 5, CustomerId = 4, Licenses = new List<License>() },
+            new Account { AccountId = 6, CustomerId = 4, Licenses = new List<License>() }
         };
 
         public static List<SoftwareService> Services = new List<SoftwareService>

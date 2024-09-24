@@ -9,6 +9,7 @@ namespace ServicesSystem.Models
     public class Customer {
         [Key]
         public int CustomerId { get; set;}
+        public int AccountId { get; set; }
         public string CompanyName { get; set; }
     }
 

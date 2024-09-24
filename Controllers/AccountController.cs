@@ -24,57 +24,26 @@ namespace ServicesSystem.Controllers
             this.licenseContext = licenseContext;
         }
 
-        [HttpGet("{accountId}/")]
-        public async Task<IActionResult> GetAccountsByAccountIdAsync(int accountId)
+        [HttpGet("{customerId}/")]
+        public async Task<IActionResult> GetAccountsByCustomerIdAsync(int customerId)
         {
-            var licenses = await licenseContext.Licenses
-                  .Include(l => l.Users)
-                  .ToListAsync();
 
-                var accounts = licenses
-                  .Join(MockData.Services,
-                        license => license.ServiceId,
-                        service => service.ServiceId,
-                        (license, service) => new
-                        {
-                            License = license,
-                            Service = service
-                        })
-                  .Join(MockData.Accounts,
-                        licenseService => licenseService.License.AccountId,
-                        account => account.AccountId,
-                        (licenseService, account) => new
-                        {
-                            licenseService.License,
-                            licenseService.Service,
-                            Account = account
-                        })
-                  .Join(licenseContext.Customers,
-                      accountInfo => accountInfo.Account.CustomerId,
-                      customer => customer.CustomerId,
-                      (accountInfo, customer) => new
-                      {
-                          LicenseId = accountInfo.License.LicenseId,
-                          AccountId = accountInfo.Account.AccountId,
-                          CustomerId = customer.CustomerId,
-                          CompanyName = customer.CompanyName,
-                          SoftwareName = accountInfo.Service.SoftwareName,
-                          Price = accountInfo.Service.Price,
-                          Users = accountInfo.License.Users.Select(u => new
-                          {
-                              UserId = u.UserId,
-                              UserName = u.UserName,
-                              CustomerId = u.CustomerId
-                          }),
-                          accountInfo.License.State,
-                          accountInfo.License.QuantityOfUsers,
-                          accountInfo.License.ValidTo
-                      })
-                  .Where(c => c.AccountId == accountId)
-                  .OrderBy(r => r.AccountId)
-                  .ToList();
+            var accounts = MockData.Accounts
+             .Join(licenseContext.Customers,
+               accountInfo => accountInfo.CustomerId,
+               customer => customer.CustomerId,
+               (accountInfo, customer) => new
+               {
+                   AccountId = accountInfo.AccountId,
+                   CustomerId = customer.CustomerId,
+                   CompanyName = customer.CompanyName,
 
-            if (!accounts.Any()) 
+               })
+           .Where(customer => customer.CustomerId == customerId)
+           .OrderBy(r => r.AccountId)
+           .ToList();
+
+            if (!accounts.Any())
                 return NotFound("ManagmentAccount not found");
             return Ok(accounts);
         }
@@ -87,7 +56,7 @@ namespace ServicesSystem.Controllers
 
 
         [HttpPost("/{accountId}/order")]
-        public async Task<IActionResult> OrderSoftwareService(int accountId, [FromBody] OrderSoftwareServiceRequest request)
+        public async Task<IActionResult> OrderSoftwareServiceAsync(int accountId, [FromBody] OrderSoftwareServiceRequest request)
         {
             var account = await MockData.GetAccountByIdAsync(accountId);
             if (account == null)
@@ -118,7 +87,7 @@ namespace ServicesSystem.Controllers
                 var user = new User
                 {
                     CustomerId = userRequest.CustomerId,
-                    LicenseId = lastLicenceId +1,
+                    LicenseId = lastLicenceId + 1,
                     UserName = userRequest.UserName,
                 };
 
@@ -131,7 +100,7 @@ namespace ServicesSystem.Controllers
             var present = new
             {
                 AccountId = accountId,
-                Users = new List<User>{ license.Users.First() },
+                Users = new List<User> { license.Users.First() },
                 ServiceId = request.ServiceId,
                 SoftwareName = service.SoftwareName,
                 QuantityOfUsers = request.QuantityOfUsers,
@@ -141,7 +110,6 @@ namespace ServicesSystem.Controllers
             return Ok(new
             {
                 present,
-                //Users = license.Users.Select(u => new { u.UserId,u.CustomerId, u.LicenseId, u.UserName })
             });
         }
 
@@ -177,7 +145,7 @@ namespace ServicesSystem.Controllers
                        LicenseId = accountInfo.License.LicenseId,
                        AccountId = accountInfo.Account.AccountId,
                        CustomerId = customer.CustomerId,
-                       CompanyName = customer.CompanyName, 
+                       CompanyName = customer.CompanyName,
                        SoftwareName = accountInfo.Service.SoftwareName,
                        Price = accountInfo.Service.Price,
                        Users = accountInfo.License.Users.Select(u => new
