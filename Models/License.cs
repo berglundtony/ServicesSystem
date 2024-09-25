@@ -18,6 +18,7 @@ namespace ServicesSystem.Models
         [Key]
         [JsonIgnore]
         public int UserId { get; set; }
+        [JsonIgnore]
         public int CustomerId { get; set; }
         [JsonIgnore]
         public int LicenseId { get; set; }

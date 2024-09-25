@@ -37,11 +37,10 @@ namespace ServicesSystem.Controllers
                    AccountId = accountInfo.AccountId,
                    CustomerId = customer.CustomerId,
                    CompanyName = customer.CompanyName,
-
                })
-           .Where(customer => customer.CustomerId == customerId)
-           .OrderBy(r => r.AccountId)
-           .ToList();
+            .Where(customer => customer.CustomerId == customerId)
+            .OrderBy(r => r.AccountId)
+            .ToList();
 
             if (!accounts.Any())
                 return NotFound("ManagmentAccount not found");
@@ -54,71 +53,62 @@ namespace ServicesSystem.Controllers
             return Ok(MockData.Services);
         }
 
-
-        [HttpPost("/{accountId}/order")]
-        public async Task<IActionResult> OrderSoftwareServiceAsync(int accountId, [FromBody] OrderSoftwareServiceRequest request)
-        {
-            var account = await MockData.GetAccountByIdAsync(accountId);
-            if (account == null)
-                return NotFound("Account not found");
-
-            var service = await MockData.GetServicesAsync(request.ServiceId);
-            if (service == null)
-                return NotFound("Service not found");
-
-            var license = new Models.License
-            {
-                AccountId = accountId,
-                ServiceId = request.ServiceId,
-                QuantityOfUsers = request.QuantityOfUsers,
-                State = "active",
-                ValidTo = DateTime.Now.AddMonths(6),
-                Users = new List<User>()
-            };
-
-            var lastLicenceId = licenseContext.Licenses
-                .OrderByDescending(u => u.LicenseId)   // Sortera efter UserId i fallande ordning
-                .Select(u => u.LicenseId)              // Välj endast UserId
-                .FirstOrDefault();
-
-            // Add users to the license
-            foreach (var userRequest in request.Users)
-            {
-                var user = new User
-                {
-                    CustomerId = userRequest.CustomerId,
-                    LicenseId = lastLicenceId + 1,
-                    UserName = userRequest.UserName,
-                };
-
-                license.Users.Add(user); // Associate the new user with the license
-            }
-
-            licenseContext.Licenses.Add(license);
-            await licenseContext.SaveChangesAsync();
-
-            var present = new
-            {
-                AccountId = accountId,
-                Users = new List<User> { license.Users.First() },
-                ServiceId = request.ServiceId,
-                SoftwareName = service.SoftwareName,
-                QuantityOfUsers = request.QuantityOfUsers,
-                State = "active",
-                ValidTo = DateTime.Now.AddMonths(6)
-            };
-            return Ok(new
-            {
-                present,
-            });
-        }
-
         [HttpGet("active-licenses-with-services-and-users")]
         public async Task<IActionResult> GetActiveLicensesWithServices()
         {
             var licenses = await licenseContext.Licenses
                 .Include(l => l.Users)
                 .Where(l => l.State == "active")
+                .ToListAsync();
+
+            var result = licenses.Join(MockData.Services,
+                license => license.ServiceId,
+                service => service.ServiceId,
+                (license, service) => new
+                {
+                    License = license,
+                    Service = service
+
+                }).Join(MockData.Accounts,
+                licenseService => licenseService.License.AccountId,
+                account => account.AccountId,
+                (licenseService, account) => new
+                {
+                    licenseService.License,
+                    licenseService.Service,
+                    Account = account
+                }).Join(licenseContext.Customers,
+                accountInfo => accountInfo.Account.CustomerId,
+                customer => customer.CustomerId,
+                (accountInfo, customer) => new
+                {
+                    LicenseId = accountInfo.License.LicenseId,
+                    AccountId = accountInfo.Account.AccountId,
+                    CustomerId = customer.CustomerId,
+                    CompanyName = customer.CompanyName,
+                    SoftwareName = accountInfo.Service.SoftwareName,
+                    Price = accountInfo.Service.Price,
+                    Users = accountInfo.License.Users.Select(u => new
+                    {
+                        UserId = u.UserId,
+                        UserName = u.UserName,
+                        CustomerId = u.CustomerId
+                    }),
+                    accountInfo.License.State,
+                    accountInfo.License.QuantityOfUsers,
+                    accountInfo.License.ValidTo
+                }).OrderBy(r => r.CustomerId).ToList();
+
+            return Ok(result);
+        }
+
+
+        [HttpGet("inactive-licenses-with-services")]
+        public async Task<IActionResult> GetInactiveLicensesWithServices()
+        {
+            var licenses = await licenseContext.Licenses
+                .Include(l => l.Users)
+                .Where(l => l.State == "inactive")
                 .ToListAsync();
 
             var result = licenses.Join(MockData.Services,
@@ -157,9 +147,68 @@ namespace ServicesSystem.Controllers
                        accountInfo.License.State,
                        accountInfo.License.QuantityOfUsers,
                        accountInfo.License.ValidTo
-                   }).OrderBy(r => r.AccountId).ToList();
+                   }).OrderBy(r => r.CustomerId).ToList();
 
             return Ok(result);
+        }
+
+
+        [HttpPost("/{accountId}/order")]
+        public async Task<IActionResult> OrderSoftwareServiceAsync(int accountId, [FromBody] OrderSoftwareServiceRequest request)
+        {
+            var account = await MockData.GetAccountByIdAsync(accountId);
+            if (account == null)
+                return NotFound("Account not found");
+
+            var service = await MockData.GetServicesAsync(request.ServiceId);
+            if (service == null)
+                return NotFound("Service not found");
+
+            var license = new Models.License
+            {
+                AccountId = accountId,
+                ServiceId = request.ServiceId,
+                QuantityOfUsers = request.QuantityOfUsers,
+                State = "active",
+                ValidTo = DateTime.Now.AddMonths(6),
+                Users = new List<User>()
+            };
+
+            var lastLicenceId = licenseContext.Licenses
+                .OrderByDescending(u => u.LicenseId)   // Sortera efter UserId i fallande ordning
+                .Select(u => u.LicenseId)              // Välj endast UserId
+                .FirstOrDefault();
+
+            // Add users to the license
+            foreach (var userRequest in request.Users)
+            {
+                var user = new User
+                {
+                    CustomerId = account.CustomerId,
+                    LicenseId = lastLicenceId + 1,
+                    UserName = userRequest.UserName,
+                };
+
+                license.Users.Add(user); // Associate the new user with the license
+            }
+
+            licenseContext.Licenses.Add(license);
+            await licenseContext.SaveChangesAsync();
+
+            var present = new
+            {
+                AccountId = accountId,
+                Users = new List<User> { license.Users.First() },
+                ServiceId = request.ServiceId,
+                SoftwareName = service.SoftwareName,
+                QuantityOfUsers = request.QuantityOfUsers,
+                State = "active",
+                ValidTo = DateTime.Now.AddMonths(6)
+            };
+            return Ok(new
+            {
+                present,
+            });
         }
 
 
@@ -204,54 +253,6 @@ namespace ServicesSystem.Controllers
             return Ok(license);
         }
 
-
-        [HttpGet("inactive-licenses-with-services")]
-        public async Task<IActionResult> GetInactiveLicensesWithServices()
-        {
-            var licenses = await licenseContext.Licenses
-                .Include(l => l.Users)
-                .Where(l => l.State == "inactive")
-                .ToListAsync();
-
-            var result = licenses.Join(MockData.Services,
-                license => license.ServiceId,
-                service => service.ServiceId,
-                (license, service) => new
-                {
-                    License = license,
-                    Service = service
-
-                }).Join(MockData.Accounts,
-                 licenseService => licenseService.License.AccountId,
-                account => account.AccountId,
-                   (licenseService, account) => new
-                   {
-                       licenseService.License,
-                       licenseService.Service,
-                       Account = account
-                   }).Join(licenseContext.Customers,
-                   accountInfo => accountInfo.Account.CustomerId,
-                   customer => customer.CustomerId,
-                   (accountInfo, customer) => new
-                   {
-                       LicenseId = accountInfo.License.LicenseId,
-                       AccountId = accountInfo.Account.AccountId,
-                       CompanyName = customer.CompanyName,
-                       SoftwareName = accountInfo.Service.SoftwareName,
-                       Price = accountInfo.Service.Price,
-                       Users = accountInfo.License.Users.Select(u => new
-                       {
-                           UserId = u.UserId,
-                           UserName = u.UserName,
-                           CustomerId = u.CustomerId
-                       }),
-                       accountInfo.License.State,
-                       accountInfo.License.QuantityOfUsers,
-                       accountInfo.License.ValidTo
-                   }).OrderBy(r => r.AccountId).ToList();
-
-            return Ok(result);
-        }
 
         [HttpPut("accounts/{licenseId}/change-state")]
         public IActionResult ChangeStateLicense(int licenseId)

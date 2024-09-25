@@ -10,8 +10,8 @@ namespace ServicesSystem.Data
             new Account { AccountId = 1, CustomerId = 1, Licenses = new List<License>() },
             new Account { AccountId = 2, CustomerId = 2, Licenses = new List<License>() },
             new Account { AccountId = 3, CustomerId = 3, Licenses = new List<License>() },
-            new Account { AccountId = 4, CustomerId = 1, Licenses = new List<License>() },
-            new Account { AccountId = 5, CustomerId = 4, Licenses = new List<License>() },
+            new Account { AccountId = 4, CustomerId = 4, Licenses = new List<License>() },
+            new Account { AccountId = 5, CustomerId = 1, Licenses = new List<License>() },
             new Account { AccountId = 6, CustomerId = 4, Licenses = new List<License>() }
         };
 
@@ -20,7 +20,7 @@ namespace ServicesSystem.Data
             new SoftwareService { ServiceId = 1, SoftwareName = "Office", Price = 600 },
             new SoftwareService { ServiceId = 2, SoftwareName = "CreativeSuite", Price = 1500 },
             new SoftwareService { ServiceId = 3, SoftwareName = "VismaControl", Price = 800 },
-            new SoftwareService { ServiceId = 4, SoftwareName = "Fortnox", Price = 1200 }
+            new SoftwareService { ServiceId = 4, SoftwareName = "Fortnox", Price = 1200 },
         };
 
         // Asynchronous method to get accounts
