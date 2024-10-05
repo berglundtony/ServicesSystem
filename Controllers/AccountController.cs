@@ -42,6 +42,8 @@ namespace ServicesSystem.Controllers
             .OrderBy(r => r.AccountId)
             .ToList();
 
+            await Task.Delay(1000); // Simulating async work with a delay
+
             if (!accounts.Any())
                 return NotFound("ManagmentAccount not found");
             return Ok(accounts);
@@ -104,7 +106,7 @@ namespace ServicesSystem.Controllers
 
 
         [HttpGet("inactive-licenses-with-services")]
-        public async Task<IActionResult> GetInactiveLicensesWithServices()
+        public async Task<IActionResult> GetInactiveLicensesWithServicesAsync()
         {
             var licenses = await licenseContext.Licenses
                 .Include(l => l.Users)
@@ -255,7 +257,7 @@ namespace ServicesSystem.Controllers
 
 
         [HttpPut("accounts/{licenseId}/change-state")]
-        public IActionResult ChangeStateLicense(int licenseId)
+        public async Task<IActionResult> ChangeStateLicenseAsync(int licenseId)
         {
             var license = licenseContext.Licenses.Where(a => a.LicenseId == licenseId).FirstOrDefault();
             if (license == null)
@@ -265,12 +267,12 @@ namespace ServicesSystem.Controllers
             license.State = (license.State == "active") ? "inactive" : "active";
 
             licenseContext.Licenses.Update(license);
-            licenseContext.SaveChanges();
+            await licenseContext.SaveChangesAsync();
             return Ok(license);
         }
 
         [HttpPut("accounts/{accountId}/extend-date")]
-        public IActionResult ExtendTheValidDateOneMoreMounth(int accountId)
+        public async Task<IActionResult> ExtendTheValidDateOneMoreMounth(int accountId)
         {
             var license = licenseContext.Licenses.Where(a => a.AccountId == accountId).FirstOrDefault();
             if (license == null)
@@ -279,7 +281,7 @@ namespace ServicesSystem.Controllers
             }
             license.ValidTo = license.ValidTo.AddMonths(1);
             licenseContext.Licenses.Update(license);
-            licenseContext.SaveChanges();
+            await licenseContext.SaveChangesAsync();
             return Ok(license);
         }
     }
